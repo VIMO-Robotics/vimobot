@@ -30,7 +30,7 @@ This is for an indoor robot project
 3. Please add someone else as the reviewer when you fire a pull request
 
 # Repo Architecture
-![](https://github.com/RobotX-NCTU/robotx_nctu/blob/master/img/repo_architecture.jpg)
+- UNDO
 
 # Installation
 

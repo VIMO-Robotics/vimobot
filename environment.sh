@@ -6,6 +6,7 @@ export ROS_LANG_DISABLE=gennodejs:geneus:genlisp
 
 shell=`basename $SHELL`
 echo "Activating ROS with shell: $SHELL"
+echo "Start VIMOBot ROS workspace"
 source /opt/ros/kinetic/setup.$shell
 if [ 2015 -ge $(date +%Y) ];
 then

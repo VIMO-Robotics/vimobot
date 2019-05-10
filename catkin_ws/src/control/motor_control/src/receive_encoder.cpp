@@ -140,7 +140,7 @@ void vimo_velocity_controller::cbTimer(const ros::TimerEvent &event){
   if(found!=std::string::npos){
     encoder_pre_l = atoi(res.substr(0, found).c_str());
     encoder_pre_r = atoi(res.substr(found+1, res.length()).c_str()); 
-  }
+  } else return;
   if(firstData) firstData = false;
   else{
     double delta_l = encoder_pre_l - encoder_pos_l,

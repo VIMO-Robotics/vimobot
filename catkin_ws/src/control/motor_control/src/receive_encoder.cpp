@@ -58,12 +58,12 @@ class vimo_velocity_controller {
    odom(nav_msgs::Odometry())
    {
      // Get parameters
-     if(!_pnh.getParam("pub_tf", pub_tf)) pub_tf = true;
+     if(!_pnh.getParam("pub_tf", pub_tf)) pub_tf = false;
      if(!_pnh.getParam("port", port)) port = "/dev/ttyACM0";
      if(!_pnh.getParam("baud", baud)) baud = 9600;
-     if(!_pnh.getParam("freq", freq)) freq = 130.0;
+     if(!_pnh.getParam("freq", freq)) freq = 100.0;
      if(!_pnh.getParam("width", width)) width = 1.0; // FIXME
-     if(!_pnh.getParam("radius", radius)) radius = 0.1; // FIXME
+     if(!_pnh.getParam("radius", radius)) radius = 0.063; // FIXME
      if(!_pnh.getParam("cpr", cpr)) cpr = 550.0; // FIXME
      // Print parameter information
      ROS_INFO("[%s] pub_tf: %s", ros::this_node::getName().c_str(), (pub_tf==true?"true":"false"));
@@ -79,7 +79,7 @@ class vimo_velocity_controller {
      // PID controller related
      pid_l = PID::pid(255, -255); // max min
      pid_r = PID::pid(255, -255); 
-     std::vector<double> vec{0.1, 0.01, 0.5}; // FIXME
+     std::vector<double> vec{50.0, 180.0, 0.05}; // FIXME
      setPID(0, vec); setPID(1, vec); 
      // Open serial
      mySerial.setPort(port);

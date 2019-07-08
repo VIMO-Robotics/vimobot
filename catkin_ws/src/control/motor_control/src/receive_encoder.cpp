@@ -6,7 +6,7 @@
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
-
+#include "motor_control/motor_pwm.h"
 bool DEBUG = 1;
 
 class vimo_velocity_controller {
@@ -30,7 +30,7 @@ class vimo_velocity_controller {
   serial::Serial mySerial; // Serial object
   PID::pid pid_l, pid_r; // PID controller
   ros::NodeHandle _nh, _pnh; // Node handler
-  ros::Publisher pub_wheel_odom; // Publisher
+  ros::Publisher pub_wheel_odom, pub_pwm; // Publisher
   ros::Subscriber sub_cmd_vel; // Subscriber
   ros::Time last_read, // Last read time
             last_update; // Last update pwm time
@@ -58,9 +58,9 @@ class vimo_velocity_controller {
    odom(nav_msgs::Odometry())
    {
      // Get parameters
-     if(!_pnh.getParam("pub_tf", pub_tf)) pub_tf = false;
+     if(!_pnh.getParam("pub_tf", pub_tf)) pub_tf = true;
      if(!_pnh.getParam("port", port)) port = "/dev/ttyACM0";
-     if(!_pnh.getParam("baud", baud)) baud = 115200;
+     if(!_pnh.getParam("baud", baud)) baud = 9600;
      if(!_pnh.getParam("freq", freq)) freq = 130.0;
      if(!_pnh.getParam("width", width)) width = 1.0; // FIXME
      if(!_pnh.getParam("radius", radius)) radius = 0.1; // FIXME
@@ -101,7 +101,8 @@ class vimo_velocity_controller {
      // Timer, publisher and subscriber
      timer  = _pnh.createTimer(ros::Duration(1/freq), &vimo_velocity_controller::cbTimer, this);
      pub_wheel_odom = _pnh.advertise<nav_msgs::Odometry>("odom", 1);
-     sub_cmd_vel = _pnh.subscribe("cmd_vel", 1, &vimo_velocity_controller::cbCmdVel, this);
+     pub_pwm = _pnh.advertise<motor_control::motor_pwm>("pwm", 1);
+     sub_cmd_vel = _pnh.subscribe("/Vimobot/joy_mapper_node/car_cmd", 1, &vimo_velocity_controller::cbCmdVel, this);
    } // End constructor
   /*
   // Shutdown signal handler
@@ -141,16 +142,17 @@ void vimo_velocity_controller::cbTimer(const ros::TimerEvent &event){
     encoder_pre_l = atoi(res.substr(0, found).c_str());
     encoder_pre_r = atoi(res.substr(found+1, res.length()).c_str()); 
   } else return;
-  if(DEBUG) ROS_INFO("encoder L : %lf, R : %lf", encoder_pre_l, encoder_pre_r);
+  // if(DEBUG) ROS_INFO("encoder L : %lf, R : %lf", encoder_pre_l, encoder_pre_r);
   if(firstData) firstData = false;
   else{
     double delta_l = encoder_pre_l - encoder_pos_l,
            delta_r = encoder_pre_r - encoder_pos_r;
     double dt = (ros::Time::now() - last_read).toSec(); // Time difference, in second
     double omega_l = 2*M_PI / cpr * delta_l / dt, // rad/s
-           omega_r = 2*M_PI / cpr * delta_r / dt,
-           v_l = radius * omega_l,// m/s
-           v_r = radius * omega_r; 
+           omega_r = 2*M_PI / cpr * delta_r / dt;
+    v_l = radius * omega_l; // m/s
+    v_r = radius * omega_r; 
+    // std::cout << "omega_l: " << omega_l << " omega_r: " << omega_r << " v_l: " << v_l << " v_r: " << v_r << std::endl;
     x += radius / 2 * cos(theta) * (omega_l + omega_r) * dt, // m
     y += radius / 2 * sin(theta) * (omega_l + omega_r) * dt, // m
     theta += radius / width * (-omega_l + omega_r) * dt;
@@ -191,6 +193,8 @@ void vimo_velocity_controller::cbCmdVel(const geometry_msgs::Twist &msg){
          omega_desired = msg.angular.z,
          v_l_desired = v_desired - width/2*omega_desired,
          v_r_desired = v_desired + width/2*omega_desired;
+  std::cout << "vl_de: " << v_l_desired << " vr_de: " << v_r_desired << " vl: " << v_l << " vr: " << v_r << std::endl; 
+
   if(v_desired == 0.0 and omega_desired == 0.0) {
     pwm_l = pwm_r = 0; // Stop
     pid_l.resetPid();
@@ -208,6 +212,11 @@ void vimo_velocity_controller::cbCmdVel(const geometry_msgs::Twist &msg){
   }
   last_update = ros::Time::now();
   if(DEBUG) ROS_INFO("PWM_L: %d, PWM_R: %d", pwm_l, pwm_r);
+
+  motor_control::motor_pwm pwm_msg = motor_control::motor_pwm();
+  pwm_msg.pwm_r = pwm_r;
+  pwm_msg.pwm_l = pwm_l;
+  pub_pwm.publish(pwm_msg);
 }
 
 /*

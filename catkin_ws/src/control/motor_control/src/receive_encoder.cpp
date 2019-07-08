@@ -61,7 +61,7 @@ class vimo_velocity_controller {
      if(!_pnh.getParam("pub_tf", pub_tf)) pub_tf = false;
      if(!_pnh.getParam("port", port)) port = "/dev/ttyACM0";
      if(!_pnh.getParam("baud", baud)) baud = 115200;
-     if(!_pnh.getParam("freq", freq)) freq = 30.0;
+     if(!_pnh.getParam("freq", freq)) freq = 130.0;
      if(!_pnh.getParam("width", width)) width = 1.0; // FIXME
      if(!_pnh.getParam("radius", radius)) radius = 0.1; // FIXME
      if(!_pnh.getParam("cpr", cpr)) cpr = 550.0; // FIXME
@@ -141,6 +141,7 @@ void vimo_velocity_controller::cbTimer(const ros::TimerEvent &event){
     encoder_pre_l = atoi(res.substr(0, found).c_str());
     encoder_pre_r = atoi(res.substr(found+1, res.length()).c_str()); 
   } else return;
+  if(DEBUG) ROS_INFO("encoder L : %lf, R : %lf", encoder_pre_l, encoder_pre_r);
   if(firstData) firstData = false;
   else{
     double delta_l = encoder_pre_l - encoder_pos_l,

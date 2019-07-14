@@ -46,10 +46,10 @@ void loop()
         for(int i = 0; i < str.length(); ++i) {
           if (str[i] == '#'){
             i++;
-            if (str[i] == 'a'){
+            if (str[i] == 'm'){
               Serial.println("MAX_1: ");
             }
-            else if (str[i] == 'b'){
+            else if (str[i] == 'n'){
               Serial.println("MIN_2: ");
             }
             else if (str[i] == 'c'){
@@ -59,42 +59,15 @@ void loop()
               Serial.println("MAX_2: ");
             }
             
-            else if (str[i] == 'e'){
-              Serial.println("Origin_1: ");
-              mode = 2;
-              String origin_str = "";
-              i++;
-              while(str[i] != '#' && str[i] != '&'){
-                origin_str += str[i];
-                i++;
-              }
-              origin1 = origin_str.toInt();
-              Serial.println(origin1);
-              i--;
-            }
-            
             else if (str[i] == 'f'){
               Serial.println("ninety_1: ");
-            }
-            else if (str[i] == 'g'){
-              Serial.println("Origin_2: ");
-              mode = 2;
-              String origin_str = "";
-              i++;
-              while(str[i] != '#' && str[i] != '&'){
-                origin_str += str[i];
-                i++;
-              }
-              origin2 = origin_str.toInt();
-              Serial.println(origin2);
-              i--;
             }
             
             else if (str[i] == 'h'){
               Serial.println("ninety_2: ");
             }
             
-            else if (str[i] == 'm'){
+            else if (str[i] == 'a'){
               Serial.print("Motor1: ");
               mode = 1;
               angle1_str = "";
@@ -108,7 +81,7 @@ void loop()
               i--;
             }
             
-            else if (str[i] == 'n'){
+            else if (str[i] == 'b'){
               Serial.print("Motor2: ");
               mode = 1;
               angle2_str = "";
@@ -159,8 +132,8 @@ void move_motor(){
   Serial.print(", ");
   Serial.println(angle2);
 
-  int angle1_write = angle1-(90.0-origin1);
-  int angle2_write = (angle2-(90.0-origin2))*180.0/220.0;
+  int angle1_write = angle1;
+  int angle2_write = angle2 * 180.0/220.0;
   
   // Speed Control with VarSpeedServo Library
   

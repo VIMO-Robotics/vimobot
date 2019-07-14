@@ -1,0 +1,4 @@
+COM_PORT:/dev/ttyACM0
+BAUD_RATES:9600
+A_cali:85
+B_cali:96

@@ -2,6 +2,9 @@
 
 import rospy
 from sensor_msgs.msg import Joy
+from std_srvs.srv import *
+from vimo_msgs.srv import SetValue, SetValueResponse
+from std_srvs.srv import Empty, EmptyResponse
 import serial
 import sys
 import os
@@ -10,6 +13,7 @@ import time
 
 class CAMERA_ARM:
 	def __init__(self):
+		self.node_name = rospy.get_name()
 		self.A_cali = 90
 		self.B_cali = 90
 		self.A_position = 90
@@ -29,8 +33,27 @@ class CAMERA_ARM:
 		self.move_motor(self.A_position, self.B_position)
 		time.sleep(1)
 		print "Done!!!"
+		self.srv_set_A = rospy.Service("/set_motor_A", SetValue, self.cbSrvSetA)
+		self.srv_set_B = rospy.Service("/set_motor_B", SetValue, self.cbSrvSetB)
+		self.srv_save = rospy.Service("/save_motor_calibration", Empty, self.cbSrvSaveCalibration)
 		self.sub_joy = rospy.Subscriber("/joy", Joy, self.cbJoy, queue_size=1)
 		# self.action()
+
+	def cbSrvSetA(self, req):
+		self.A_cali = int(req.value)
+		rospy.loginfo("[%s] Set motor A degree bias: %s" % (self.node_name, self.A_cali))
+		self.move_motor(self.A_position, self.B_position)
+		return SetValueResponse()
+
+	def cbSrvSetB(self, req):
+		self.B_cali = int(req.value)
+		rospy.loginfo("[%s] Set motor B degree bias: %s" % (self.node_name, self.B_cali))
+		self.move_motor(self.A_position, self.B_position)
+		return SetValueResponse()
+
+	def cbSrvSaveCalibration(self, req):
+		self.write_file(self.file_path)
+		return EmptyResponse()
 
 	def cbJoy(self, msg):
 		if msg.axes[7] == 1:
